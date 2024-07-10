@@ -38,7 +38,7 @@ def polygon_to_area(polygon_coords):
             rice_area = result[0]*100
             sugarcane_area = result[1]*100
         
-        return return {
+        return {
             'rice area': rice_area,
             'sugarcane area': sugarcane_area
         }
@@ -49,4 +49,13 @@ def polygon_to_area(polygon_coords):
     finally:
         cursor.close()
         conn.close()
-    
+
+# polygon_coords = [
+#     (101.5, 15.5),
+#     (102.0, 15.5),
+#     (102.0, 16.0),
+#     (101.5, 16.0),
+#     (101.5, 15.5)
+# ]
+
+# print(polygon_to_area(polygon_coords))
