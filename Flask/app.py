@@ -3,7 +3,7 @@ from flask import Flask, request, jsonify, send_file, render_template, url_for
 from lat_lon_db import lat_lon_to_plant_type
 from polygon_to_area import polygon_to_area
 from polygon_to_tiff import polygon_to_geotiff
-from polygon_to_tiff import invalid_area
+from polygon_to_tiff import out_raster_area
 
 app = Flask(__name__)
 UPLOAD_FOLDER = 'tiff_results/'
@@ -46,7 +46,7 @@ def get_area():
     return jsonify(result)
 
 @app.route('/download/', methods=['POST'])
-def get_tiffname():
+def tiff_output():
     data = request.get_json()
     polygon_coords = data.get('polygon_coords')
     result = polygon_to_geotiff(polygon_coords)
@@ -56,7 +56,8 @@ def get_tiffname():
         return jsonify({"file_url": "Not Found", "status": status})
     else:
         file_url = url_for('get_tiff', filename=filename)
-        invalid = invalid_area(polygon_coords)
+        plant_area = polygon_to_area(polygon_coords)
+        out_of_raster = out_raster_area(polygon_coords)
         return jsonify(
             {
                 "status": status,
@@ -64,15 +65,15 @@ def get_tiffname():
                     "raster": file_url,
                     "stats": {
                         "area": {
-                            "rice": "...",
-                            "sugarcane": "...",
-                            "other": "...",
-                            "out_of_raster": "..."
+                            "rice": plant_area[1],
+                            "sugarcane": plant_area[2],
+                            "other": plant_area[0],
+                            "out_of_raster": out_of_raster
                         },
-                        "area_unit": "sq.m."
+                        "area_unit": plant_area[3]
                     }
                 },
-                "input_polygon": "coord"
+                "input_polygon": polygon_coords
             }
         )
 
@@ -83,5 +84,3 @@ def get_tiff(filename):
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
-
-
