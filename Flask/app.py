@@ -1,13 +1,16 @@
 from flask import Flask, request, jsonify, send_file, render_template, url_for
 
 from lat_lon_db import lat_lon_to_plant_type
-from polygon_to_area import polygon_to_area
-from polygon_to_tiff import polygon_to_geotiff
-from polygon_to_tiff import out_raster_area
+# from polygon_to_area import polygon_to_area
+#from polygon_to_tiff import polygon_to_geotiff
+#from polygon_to_tiff import out_raster_area
+from polygon_to_tiff import TiffFactory
 
 app = Flask(__name__)
 UPLOAD_FOLDER = 'tiff_results/'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
+tiff_factory = TiffFactory()
 
 # polygon_coords = [
 #     (101.30000000, 15.50764175),
@@ -38,26 +41,26 @@ def get_band():
     result = lat_lon_to_plant_type(lon, lat)
     return jsonify(result)
 
-@app.route('/area', methods=['GET'])
-def get_area():
-    data = request.get_json()
-    polygon_coords = data.get('polygon_coords')
-    result = polygon_to_area(polygon_coords)
-    return jsonify(result)
+# @app.route('/area', methods=['GET'])
+# def get_area():
+#     data = request.get_json()
+#     polygon_coords = data.get('polygon_coords')
+#     result = polygon_to_area(polygon_coords)
+#     return jsonify(result)
 
 @app.route('/download/', methods=['POST'])
 def tiff_output():
     data = request.get_json()
     polygon_coords = data.get('polygon_coords')
-    result = polygon_to_geotiff(polygon_coords)
+    result = tiff_factory.polygon_to_geotiff(polygon_coords)
     filename = result[0]
     status = result[1]
     if filename == None:
         return jsonify({"file_url": "Not Found", "status": status})
     else:
         file_url = url_for('get_tiff', filename=filename)
-        plant_area = polygon_to_area(polygon_coords)
-        out_of_raster = out_raster_area(polygon_coords)
+        plant_area = tiff_factory.polygon_to_area(polygon_coords)
+        out_of_raster = tiff_factory.out_raster_area(polygon_coords)
         return jsonify(
             {
                 "status": status,
@@ -70,7 +73,7 @@ def tiff_output():
                             "other": plant_area[0],
                             "out_of_raster": out_of_raster
                         },
-                        "area_unit": plant_area[3]
+                        "area_unit": "m²"
                     }
                 },
                 "input_polygon": polygon_coords
