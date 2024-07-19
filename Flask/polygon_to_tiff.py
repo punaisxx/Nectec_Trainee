@@ -112,10 +112,14 @@ class TiffFactory:
             LIMIT 1
             ),
             count_value AS (
-                SELECT SUM(ST_ValueCount(rast,1,1)) AS value1, SUM(ST_ValueCount(rast,1,2)) As value2, SUM(ST_ValueCount(rast,1,0)) As value0
-                FROM raster_results_1
-                WHERE ST_Intersects(rast,
-                    ST_GeomFromText('{polygon_wkt}', 4326)
+                SELECT 
+                    SUM(ST_ValueCount(rast,1,1)) AS value1, 
+                    SUM(ST_ValueCount(rast,1,2)) As value2, 
+                    SUM(ST_ValueCount(rast,1,0)) As value0
+                FROM 
+                    raster_results_1
+                WHERE 
+                    ST_Intersects(rast, ST_GeomFromText('{polygon_wkt}', 4326)
                 ) 
             ),
             pixel_area AS (

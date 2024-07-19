@@ -1,4 +1,5 @@
 from flask import Flask, request, jsonify, send_file, render_template, url_for
+import json, os, signal
 
 from lat_lon_db import lat_lon_to_plant_type
 # from polygon_to_area import polygon_to_area
@@ -32,7 +33,7 @@ tiff_factory = TiffFactory()
 
 @app.route('/')
 def index():
-    return render_template('index.html')
+    return jsonify({"Hello": "World!"})
 
 @app.route('/band', methods=['GET'])
 def get_band():
