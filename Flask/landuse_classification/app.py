@@ -3,12 +3,13 @@ from datetime import datetime
 import uuid
 import os
 import asyncio
+import subprocess
 
 import landuse_classification
 import fake_landuse_classification
 from files_status import classified_files
 
-
+PYTHON_PATH = "/usr/local/bin/python3"
 
 app = Flask(__name__)
 loop = asyncio.get_event_loop()
@@ -47,12 +48,17 @@ def create_file():
     dir = 'results/'
     file_path = os.path.join(dir, file_data[0])
     # task = loop.create_task(fake_landuse_classification.main(['--filename', file_path]))
-    fake_landuse_classification.main(['--filename', file_path])
-    # return jsonify({'task_id': id(task)}), 202
-    print("script executed.")
+    #fake_landuse_classification.main(['--filename', file_path])
+    #fake_landuse_classification.export_file(['--filename', file_path])
+
+    process = subprocess.Popen([PYTHON_PATH, "fake_landuse_classification.py", "--filename", file_path])
+
+    pid = process.pid
+    print("script executed. pid:",pid)
+
     return jsonify(
         {
-            "x": "..."
+            "pid": pid
         }
     )
 

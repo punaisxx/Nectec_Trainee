@@ -46,8 +46,8 @@ def get_band():
 # def get_area():
 #     data = request.get_json()
 #     polygon_coords = data.get('polygon_coords')
-#     result = polygon_to_area(polygon_coords)
-#     return jsonify(result)
+#     results = polygon_to_area(polygon_coords)
+#     return jsonify(results)
 
 @app.route('/download/', methods=['POST'])
 def tiff_output():
@@ -65,7 +65,7 @@ def tiff_output():
         return jsonify(
             {
                 "status": status,
-                "result": {
+                "results": {
                     "raster": file_url,
                     "stats": {
                         "area": {

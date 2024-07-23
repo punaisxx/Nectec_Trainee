@@ -44,17 +44,21 @@ def delete_temp_file(temp_path):
 
 @click.command()
 @click.option('-f', '--filename', type=click.Path() ,help='The output file path')
-def main(filename):
+def export_file(filename):
     os.makedirs(os.path.dirname(filename), exist_ok=True)
 
     create_temp_file(filename+'.tmp')
 
-    delay = random.uniform(30, 300)  # delay between 30 seconds and 5 minutes
+    #delay = random.uniform(30, 300)  # delay between 30 seconds and 5 minutes
+    delay = random.uniform(10, 30)
     print(f"Waiting for {delay:.2f} seconds before creating the next file.")
     time.sleep(delay)
 
     create_random_file(file_path=filename)
     delete_temp_file(filename+".tmp")
-    
+
+    print("end of main.")
+    return
+
 if __name__ == "__main__":
-    main()
+    export_file()
