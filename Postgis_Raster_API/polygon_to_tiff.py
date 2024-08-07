@@ -59,8 +59,6 @@ class TiffFactory:
 
         finally:
             cursor.close()
-            #conn.close()
-
 
     def out_raster_area(self, polygon_coords):
       
@@ -95,8 +93,6 @@ class TiffFactory:
 
         finally:
             cursor.close()
-            #conn.close()
-
 
     def polygon_to_area(self, polygon_coords):
         cursor = self.conn.cursor()
@@ -133,16 +129,8 @@ class TiffFactory:
                 100 * value2 AS area2
             FROM pixel_area, count_value;
             """
-
-            # query2 = f"""
-            # SELECT ST_Area(ST_Transform(ST_GeomFromText('{polygon_wkt}', 4326), 3857)) AS geom
-            # """
-    
             cursor.execute(query1, (polygon_wkt,))
             result = cursor.fetchone()
-
-            # cursor.execute(query2, (polygon_wkt,))
-            # poly_area = cursor.fetchone()
         
             if result:
                 none_type = round(result[0], 2)
@@ -157,14 +145,3 @@ class TiffFactory:
         
         finally:
             cursor.close()
-            # conn.close()
-
-  # polygon_coords = [
-  #     (101.5, 15.5),
-  #     (102.0, 15.5),
-  #     (102.0, 16.0),
-  #     (101.5, 16.0),
-  #     (101.5, 15.5)
-  # ]
-
-  # print(out_raster_area(polygon_coords))

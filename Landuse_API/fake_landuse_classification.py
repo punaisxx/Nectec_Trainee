@@ -49,14 +49,14 @@ def export_file(filename):
 
     create_temp_file(filename+'.tmp')
 
-    delay = random.uniform(30, 40)  # delay between 30 seconds and 5 minutes
-    # delay = random.uniform(600, 1200)
+    # delay = random.uniform(30, 40)  # delay between 30 seconds and 5 minutes
+    delay = random.uniform(600, 1200)
     print(f"Waiting for {delay:.2f} seconds before creating the next file.")
     time.sleep(delay)
 
     create_random_file(file_path=filename)
     delete_temp_file(filename+".tmp")
-    return 0
+    return
 
 if __name__ == "__main__":
     export_file()

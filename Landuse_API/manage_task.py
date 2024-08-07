@@ -133,19 +133,3 @@ class TaskMonitoring:
                 finally:
                         self.conn.commit()
                         cursor.close()
-
-
-# if __name__ == "__main__":
-#         task_monitor = TaskMonitoring()
-#         action = 'url'
-#         task_monitor.check_finished_status(action)
-#         # task_monitor.add_task()
-#         # task_monitor.cancel_file_creation()
-        # task_monitor.display_tasks()
-#         task_monitor.find_file('33708')
-#         pid = 33708
-#         filename = task_monitor.find_file(pid)
-#         if filename:
-#                 print(f"Filename: {filename}")
-#         else:
-#                 print("No filename found for the given PID.")

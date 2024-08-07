@@ -1,15 +1,13 @@
-from flask import Flask, request, jsonify, send_file, url_for
+from flask import Flask, jsonify, send_file, url_for
 from datetime import datetime
 import uuid
 import os
-import time
 import subprocess
 
 import psutil
 
 from multiprocess import *
 from manage_task import TaskMonitoring
-# from files_status import classified_files
 
 PYTHON_PATH = "/usr/local/bin/python"
 results_dir = "./results"
@@ -84,31 +82,6 @@ def status():
 
 @app.route('/cancel/<pid>')
 def terminate_process(pid):
-    # pid_int = int(pid)
-    # process = psutil.Process(pid_int)
-    # process.terminate()  # Sends SIGTERM
-    # process.wait()  # Ensure the process is terminated
-    # task_monitoring.cancel_file_creation(pid_int)
-    # print(f"Process with PID {pid} has been canceled.")
-    # return jsonify(
-    #     {
-    #         "status": 'Cancel process completed'
-    #     }
-    # )
-    # try:
-    #     process = psutil.Process(pid_int)
-    #     process.terminate()  # Sends SIGTERM
-    #     process.wait()  # Ensure the process is terminated
-    #     task_monitoring.cancel_file_creation(pid_int)
-    #     print(f"Process with PID {pid} has been canceled.")
-
-    # except psutil.NoSuchProcess:
-    #     print(f"No such process with PID {pid}")
-    # return jsonify(
-    #     {
-    #         "status": 'Cancel process completed'
-    #     }
-    # )
     pidi = int(pid)
     try:
         process = psutil.Process(pidi)
@@ -119,19 +92,25 @@ def terminate_process(pid):
             if process.is_running():
                 process.kill() 
             print(f"Process with PID {pid} has been terminated.")
-            return f"Process with PID {pid} has been terminated."
+            status = f"Process with PID {pid} has been terminated."
+            print(status)
         else:
-            print(f"Process with PID {pid} is not running.")
-            return f"Process with PID {pid} is not running."
+            status = f"Process with PID {pid} is not running."
+            print(status)
     except psutil.NoSuchProcess:
-        print(f"No such process with PID {pid}.")
-        return f"No such process with PID {pid}."
+        status = f"No such process with PID {pid}."
+        print(status)
     except psutil.AccessDenied:
-        print(f"Permission denied to terminate process with PID {pid}.")
-        return f"Permission denied to terminate process with PID {pid}."
+        status = f"Permission denied to terminate process with PID {pid}."
+        print(status)
     except psutil.TimeoutExpired:
-        print(f"Timeout expired while waiting for process with PID {pid} to terminate.")
-        return f"Timeout expired while waiting for process with PID {pid} to terminate."
+        status = f"Timeout expired while waiting for process with PID {pid} to terminate."
+        print(status)
+    return jsonify(
+        {
+                "status": status
+        }
+    )
 
 @app.route('/running')
 def is_process_running():
@@ -145,8 +124,6 @@ def is_process_running():
     
 @app.route('/downloads/<filename>')
 def download_file(filename):
-    # filepath = os.path.join(results_dir, filename)
-
     filepath = os.path.join(results_dir, filename)
     return send_file(filepath, as_attachment=True, mimetype='text/plain')
 
