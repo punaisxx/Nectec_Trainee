@@ -2,15 +2,19 @@ import psycopg2
 from psycopg2 import OperationalError
 from datetime import datetime
 import uuid
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 class TiffFactory:
     def __init__(self):
         try:
-            self.conn = psycopg2.connect( host="10.223.72.83" ,
-                                    port="5433", 
-                                    database = "postgres" , 
-                                    user="postgres" , 
-                                    password="punpuntpasswd"
+            self.conn = psycopg2.connect( host=os.getenv('HOST') ,
+                                    port=os.getenv('PORT'), 
+                                    database = os.getenv('DATABASE') , 
+                                    user=os.getenv('USER') , 
+                                    password=os.getenv('PASSWORD')
             )
         except OperationalError as e:
             print(f"Error connecting to the database: {e}")

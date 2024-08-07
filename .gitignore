@@ -1,0 +1,11 @@
+# ignore ALL .___ files
+*.env
+*.sh
+*.pyc
+
+# ignore ALL files in ANY directory named ..
+results/
+tiff_results/
+
+# ignore file 
+/Landuse_API/multiprocess.py

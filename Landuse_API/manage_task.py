@@ -5,12 +5,12 @@ import os
 class TaskMonitoring:
         def __init__(self):
                 try:
-                        self.conn = psycopg2.connect( host="10.223.72.83" ,
-                                    port="5433", 
-                                    database = "postgres" , 
-                                    user="postgres" , 
-                                    password="punpuntpasswd"
-                )
+                        self.conn = psycopg2.connect( host=os.getenv('HOST') ,
+                                    port=os.getenv('PORT'), 
+                                    database = os.getenv('DATABASE') , 
+                                    user=os.getenv('USER') , 
+                                    password=os.getenv('PASSWORD')
+                        )
                 except OperationalError as e:
                         print(f"Error connecting to the database: {e}")
                         self.conn = None
