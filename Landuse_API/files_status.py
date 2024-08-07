@@ -1,5 +1,4 @@
 import os
-import json
 
 def classified_files(dir):
         classified_files = {"processing": [], "finished": []}

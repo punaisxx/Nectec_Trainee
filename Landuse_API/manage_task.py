@@ -59,9 +59,7 @@ class TaskMonitoring:
                         cursor.close()
 
         def cancel_file_creation(self, pid):
-                # pid = 1
-                filename = ''
-                status = 'canceled'
+                status = 'cancel'
                 timestamp = datetime.now()
                 action = ''
                 cursor = self.conn.cursor()
@@ -115,7 +113,7 @@ class TaskMonitoring:
                         self.conn.commit()
                         cursor.close()
 
-        def check_finished_status(self, action):
+        def check_finished_status(self):
                 status = 'finished'
                 timestamp = datetime.now()
                 cursor = self.conn.cursor()
@@ -127,26 +125,6 @@ class TaskMonitoring:
                         
                         cursor.execute(query)
                         result = cursor.fetchall()
-                        # print(result)
-                        # for f in result:
-                        #         if os.path.exists(os.path.join(dir, f[0])):
-                        #                 # query = """
-                        #                 # UPDATE tasks SET status = %s, action = %s, timestamp = %s WHERE filename = %s;
-                        #                 # """
-                        #                 # values = (status, action, timestamp, f)
-                        #                 # cursor.execute(query, values)
-                        #                 self.finished_creation(f, action)
-                        #                 print(f'{f[0]} finished')
-                        #         elif os.path.exists(os.path.join(dir, f[0]+'.tmp')):
-                        #                 print(f'{f[0]} still running')
-                                # else:
-                                #         status = 'File Not Found'
-                                #         query = """
-                                #         UPDATE tasks SET status = %s, action = %s, timestamp = %s WHERE filename = %s;
-                                #         """
-                                #         values = (status, '', timestamp, f)
-                                #         cursor.execute(query, values)
-                                #         print(f'{f[0]} not found')
                         return result
                 except Exception as e:
                         print(f"Error: {e}")
@@ -157,10 +135,10 @@ class TaskMonitoring:
                         cursor.close()
 
 
-if __name__ == "__main__":
-        task_monitor = TaskMonitoring()
-        action = 'url'
-        task_monitor.check_finished_status(action)
+# if __name__ == "__main__":
+#         task_monitor = TaskMonitoring()
+#         action = 'url'
+#         task_monitor.check_finished_status(action)
 #         # task_monitor.add_task()
 #         # task_monitor.cancel_file_creation()
         # task_monitor.display_tasks()

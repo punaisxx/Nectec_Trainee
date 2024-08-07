@@ -30,10 +30,12 @@ def generate_filename():
 
 @app.route('/createfile', methods=['POST'])
 def create_file():
+    timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
     filename = generate_filename()
     file_path = os.path.join(results_dir, filename)
 
     process = subprocess.Popen([PYTHON_PATH, "fake_landuse_classification.py", "--filename", file_path])
+    # process.wait()
     pid = process.pid
     action = url_for('terminate_process', pid=pid)
     print("script executed. pid:",pid)
@@ -41,20 +43,20 @@ def create_file():
 
     return jsonify(
         {
-            'filename': filename
-            # "pid": pid,
-            # "filename": filename,
-            # "status": '',
-            # "action": action,
-            # "timestamp": ''
+            "status": 'Start creating a file',
+            "file": {
+                "filename": filename,
+                "pid": pid,
+                "cancel": action,
+                "timestamp": timestamp
+            }
         }
     )
 
 @app.route('/status')
 def status():
-    action = ''
 
-    finished_file = task_monitoring.check_finished_status(action)
+    finished_file = task_monitoring.check_finished_status()
 
     for f in finished_file:
         action = url_for('download_file', filename=f[0])
@@ -80,23 +82,56 @@ def status():
     ]
     return jsonify(formatted_data)
 
-@app.route('/canceled/<pid>')
+@app.route('/cancel/<pid>')
 def terminate_process(pid):
-    pid_int = int(pid)
-    try:
-        process = psutil.Process(pid_int)
-        process.terminate()  # Sends SIGTERM
-        process.wait()  # Ensure the process is terminated
-        task_monitoring.cancel_file_creation(pid_int)
-        print(f"Process with PID {pid} has been canceled.")
+    # pid_int = int(pid)
+    # process = psutil.Process(pid_int)
+    # process.terminate()  # Sends SIGTERM
+    # process.wait()  # Ensure the process is terminated
+    # task_monitoring.cancel_file_creation(pid_int)
+    # print(f"Process with PID {pid} has been canceled.")
+    # return jsonify(
+    #     {
+    #         "status": 'Cancel process completed'
+    #     }
+    # )
+    # try:
+    #     process = psutil.Process(pid_int)
+    #     process.terminate()  # Sends SIGTERM
+    #     process.wait()  # Ensure the process is terminated
+    #     task_monitoring.cancel_file_creation(pid_int)
+    #     print(f"Process with PID {pid} has been canceled.")
 
+    # except psutil.NoSuchProcess:
+    #     print(f"No such process with PID {pid}")
+    # return jsonify(
+    #     {
+    #         "status": 'Cancel process completed'
+    #     }
+    # )
+    pidi = int(pid)
+    try:
+        process = psutil.Process(pidi)
+        if process.is_running():
+            process.terminate() 
+            process.wait(timeout=3)
+            task_monitoring.cancel_file_creation(pidi)  
+            if process.is_running():
+                process.kill() 
+            print(f"Process with PID {pid} has been terminated.")
+            return f"Process with PID {pid} has been terminated."
+        else:
+            print(f"Process with PID {pid} is not running.")
+            return f"Process with PID {pid} is not running."
     except psutil.NoSuchProcess:
-        print(f"No such process with PID {pid}")
-    return jsonify(
-        {
-            "status": 'Cancel process completed'
-        }
-    )
+        print(f"No such process with PID {pid}.")
+        return f"No such process with PID {pid}."
+    except psutil.AccessDenied:
+        print(f"Permission denied to terminate process with PID {pid}.")
+        return f"Permission denied to terminate process with PID {pid}."
+    except psutil.TimeoutExpired:
+        print(f"Timeout expired while waiting for process with PID {pid} to terminate.")
+        return f"Timeout expired while waiting for process with PID {pid} to terminate."
 
 @app.route('/running')
 def is_process_running():
@@ -107,16 +142,6 @@ def is_process_running():
     except psutil.NoSuchProcess:
         return 'False'
 
-# @app.route('/download', methods=['POST'])
-# def download(filename):
-#     # filename = landuse_classification.main()
-#     file_url = url_for('download_file', filename=filename)
-#     return jsonify(
-#         {
-#             "filename": filename,
-#             "URL": file_url
-#         }
-#     )
     
 @app.route('/downloads/<filename>')
 def download_file(filename):

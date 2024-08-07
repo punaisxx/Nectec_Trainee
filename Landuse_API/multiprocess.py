@@ -8,23 +8,16 @@ from multiprocessing import Lock, Process, Queue, current_process
 PYTHON_PATH = "/opt/miniconda3/bin/python"
 # PYTHON_PATH = "/usr/local/bin/python"
 
-def generate_filename():
-        # dir = "results"
-        timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
-        uid = uuid.uuid4()
-        filename = f"{timestamp}_{uid}.txt"
-        # filename = 'myfile11.txt'
-        # file_path = os.path.join(dir, filename)
-        # dir_list = os.listdir(file_path)
-        return filename
-
 def write_empty_file(source_path):
+    timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
+    uid = uuid.uuid4()
+    filename = f"{timestamp}_{uid}.txt"
     with open(source_path, 'w') as fp:
         pass
         print("create empty file")
+    return filename
 
 def check_file_exists(source_dir, des_dir):
-
     if os.listdir(source_dir):
         for fs in os.listdir(source_dir):
             if os.path.exists(os.path.join(des_dir, fs)) and os.path.exists(os.path.join(des_dir, fs+'.tmp')):
@@ -38,18 +31,18 @@ def check_file_exists(source_dir, des_dir):
     else:
         print("This director is empty.")
 
-def run_subprocess(filepath, results):    
-    process = subprocess.Popen([PYTHON_PATH, "fake_landuse_classification.py", "--filename", filepath], shell=True, stdout=subprocess.PIPE)
+# def run_subprocess(filepath, results):    
+#     process = subprocess.Popen([PYTHON_PATH, "fake_landuse_classification.py", "--filename", filepath], shell=True, stdout=subprocess.PIPE)
 
-    pid = process.pid
-    results.append(pid)
-    print("script executed. pid:",pid)
+#     pid = process.pid
+#     results.append(pid)
+#     print("script executed. pid:",pid)
     
-    return pid
+#     return pid
 
-def list_file(des_dir):
-    files = [os.path.join(des_dir, f) for f in os.listdir(des_dir) if os.path.isfile(os.path.join(des_dir, f))]
-    print(files)
+# def list_file(des_dir):
+#     files = [os.path.join(des_dir, f) for f in os.listdir(des_dir) if os.path.isfile(os.path.join(des_dir, f))]
+#     print(files)
 
 def main():
     des_dir = 'destination_dir/'
