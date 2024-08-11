@@ -16,6 +16,7 @@ class TiffFactory:
                                     user=os.getenv('USER') , 
                                     password=os.getenv('PASSWORD')
             )
+
         except OperationalError as e:
             print(f"Error connecting to the database: {e}")
             self.conn = None
@@ -54,8 +55,10 @@ class TiffFactory:
                 status = f"File '{filename}' created."
                 return filename, status
             else:
+                # No cropped raster data found. Start landuse detection engine.
+                no_data = 'x'
                 status = "No cropped raster data found."
-                return None, status
+                return no_data, status
 
         except Exception as e:
             print(f"Error: {e}")
@@ -89,7 +92,7 @@ class TiffFactory:
             cursor.execute("SET postgis.gdal_enabled_drivers = 'ENABLE_ALL';")
             cursor.execute(query)
             out_area = cursor.fetchone()
-            out_area_output = round(out_area[0], 2)
+            out_area_output = round(out_area[0])
 
             return out_area_output
         except Exception as e:

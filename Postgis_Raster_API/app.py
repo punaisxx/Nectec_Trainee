@@ -1,53 +1,23 @@
-from flask import Flask, request, jsonify, send_file, render_template, url_for
-import json, os, signal
+from flask import Flask, request, jsonify, send_file, redirect, url_for
+from datetime import datetime
+import uuid
+import os
+import subprocess
+import psutil
 
-# from lat_lon_db import lat_lon_to_plant_type
-# from polygon_to_area import polygon_to_area
-#from polygon_to_tiff import polygon_to_geotiff
-#from polygon_to_tiff import out_raster_area
+# croppingg polygon and find area
 from polygon_to_tiff import TiffFactory
-
-app = Flask(__name__)
-UPLOAD_FOLDER = 'tiff_results/'
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-
 tiff_factory = TiffFactory()
 
-# polygon_coords = [
-#     (101.30000000, 15.50764175),
-#     (101.58234912, 15.49990556), 
-#     (101.58062997, 15.30478166),
-#     (101.26774407, 15.44661181), 
-#     (101.30000000, 15.50764175)
-# ]
+# manage tasks for landuse detection engine on DB
+from manage_task import TaskMonitoring
+task_monitoring = TaskMonitoring()
 
-# data = {
-#     "polygon_coords": [
-#         [102.26539189185458, 16.54356817627857],
-#         [101.95606037474194, 16.08328194532515],
-#         [101.93394678768034, 16.647561388673765],
-#         [102.36400115858939, 16.538869127991614],
-#         [102.26539189185458, 16.54356817627857]
-#     ]
-# }
+# path for landuse detection engine
+PYTHON_PATH = "/usr/local/bin/python"
+ai_results = "./ai_results"
 
-@app.route('/')
-def index():
-    return jsonify({"Hello": "World!"})
-
-# @app.route('/band', methods=['GET'])
-# def get_band():
-#     lon = float(request.args.get('lon'))
-#     lat = float(request.args.get('lat'))
-#     result = lat_lon_to_plant_type(lon, lat)
-#     return jsonify(result)
-
-# @app.route('/area', methods=['GET'])
-# def get_area():
-#     data = request.get_json()
-#     polygon_coords = data.get('polygon_coords')
-#     result = polygon_to_area(polygon_coords)
-#     return jsonify(result)
+app = Flask(__name__)
 
 @app.route('/download/', methods=['POST'])
 def tiff_output():
@@ -58,6 +28,8 @@ def tiff_output():
     status = result[1]
     if filename == None:
         return jsonify({"file_url": "Not Found", "status": status})
+    elif filename == 'x':
+        return redirect(url_for('create_file'))
     else:
         file_url = url_for('get_tiff', filename=filename)
         plant_area = tiff_factory.polygon_to_area(polygon_coords)
@@ -85,6 +57,99 @@ def tiff_output():
 def get_tiff(filename):
     tiff_path = f'/app/tiff_results/{filename}'
     return send_file(tiff_path, as_attachment=True, mimetype='image/tiff')
+
+# Start use Landuse Detect Classification.
+@app.route('/detect_land/createfile')
+def create_file():
+    timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
+    uid = uuid.uuid4()
+    filename = f"{timestamp}_{uid}.txt"
+    file_path = os.path.join(ai_results, filename)
+
+    process = subprocess.Popen([PYTHON_PATH, "fake_landuse_classification.py", "--filename", file_path])
+    # process.wait()
+    pid = process.pid
+    action = url_for('terminate_process', pid=pid)
+    print("script executed. pid:",pid)
+    task_monitoring.add_task(pid, filename, action)
+
+    return jsonify(
+        {
+            "status": 'Start creating a file',
+            "file": {
+                "filename": filename,
+                "pid": pid,
+                "cancel": action,
+                "timestamp": timestamp
+            }
+        }
+    )
+
+@app.route('/status')
+def status():
+
+    finished_file = task_monitoring.check_finished_status()
+
+    for f in finished_file:
+        action = url_for('download_file', filename=f[0])
+        if os.path.exists(os.path.join(ai_results, f[0])):
+            task_monitoring.finished_creation(f, action)
+            print(f'{f[0]} finished')
+        elif os.path.exists(os.path.join(ai_results, f[0]+'.tmp')):
+            print(f'{f[0]} still running')
+
+    tasks = task_monitoring.display_tasks()
+    formatted_data = [
+        {
+            "id": row[0],
+            "pid": row[1], 
+            "filename": row[2], 
+            "status": row[3],
+            "action": row[4],
+            "timestamp": row[5].strftime("%Y%m%d-%H%M%S")
+        }
+        for row in tasks
+    ]
+    return jsonify(formatted_data)
+
+@app.route('/detect_land/cancel/<pid>')
+def terminate_process(pid):
+    pidi = int(pid)
+    try:
+        process = psutil.Process(pidi)
+        if process.is_running():
+            process.terminate() 
+            process.wait(timeout=3)
+            task_monitoring.cancel_file_creation(pidi)  
+            if process.is_running():
+                process.kill() 
+            print(f"Process with PID {pid} has been terminated.")
+            status = f"Process with PID {pid} has been terminated."
+            print(status)
+        else:
+            status = f"Process with PID {pid} is not running."
+            print(status)
+    except psutil.NoSuchProcess:
+        status = f"No such process with PID {pid}."
+        print(status)
+    except psutil.AccessDenied:
+        status = f"Permission denied to terminate process with PID {pid}."
+        print(status)
+    except psutil.TimeoutExpired:
+        status = f"Timeout expired while waiting for process with PID {pid} to terminate."
+        print(status)
+    return jsonify(
+        {
+                "status": status
+        }
+    )
+
+@app.route('/detect_land/downloads/<filename>')
+def download_file(filename):
+    filepath = os.path.join(ai_results, filename)
+    return send_file(filepath, as_attachment=True, mimetype='text/plain')
+
+
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)

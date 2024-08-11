@@ -11,6 +11,7 @@ class TaskMonitoring:
                                     user=os.getenv('USER') , 
                                     password=os.getenv('PASSWORD')
                         )
+                        
                 except OperationalError as e:
                         print(f"Error connecting to the database: {e}")
                         self.conn = None
@@ -28,11 +29,10 @@ class TaskMonitoring:
                         """
                         values = (pid, filename, status, action, timestamp)
                         cursor.execute(query, values)
-                        # result = cursor.fetchone()
                         print(f'Insert {pid} completed')
                 except Exception as e:
                         print(f"Error: {e}")
-                        return None, status
+                        return None
 
                 finally:
                         self.conn.commit()
@@ -48,11 +48,10 @@ class TaskMonitoring:
                         """
                         values = (status, action, timestamp, filename)
                         cursor.execute(query, values)
-                        # result = cursor.fetchone()
                         return 
                 except Exception as e:
                         print(f"Error: {e}")
-                        return None, status
+                        return None
 
                 finally:
                         self.conn.commit()
@@ -78,7 +77,7 @@ class TaskMonitoring:
                         cursor.execute(query2, (pid,))
                         result = cursor.fetchone()
                         file_delete = result[0]+'.tmp'
-                        dir = './results'
+                        dir = './ai_results'
                         if os.path.exists(os.path.join(dir, file_delete)):
                                 os.remove(os.path.join(dir, file_delete))
                                 print(f"File {file_delete} has been deleted.")
@@ -87,14 +86,14 @@ class TaskMonitoring:
                         print('')
                 except Exception as e:
                         print(f"Error: {e}")
-                        return None, status
+                        return None
 
                 finally:
                         self.conn.commit()
                         cursor.close()
 
         def display_tasks(self):
-                status = ''
+
                 cursor = self.conn.cursor()
 
                 try:
@@ -102,33 +101,28 @@ class TaskMonitoring:
                         SELECT * FROM tasks;
                         """
                         cursor.execute(query)
-                        # result = cursor.fetchone()
                         result = cursor.fetchall()
                         return result
                 except Exception as e:
                         print(f"Error: {e}")
-                        return None, status
+                        return None
 
                 finally:
                         self.conn.commit()
                         cursor.close()
 
         def check_finished_status(self):
-                status = 'finished'
-                timestamp = datetime.now()
                 cursor = self.conn.cursor()
-                dir = "./results"
                 try:
                         query = """
                         SELECT filename FROM tasks WHERE status = 'running';
-                        """
-                        
+                        """                        
                         cursor.execute(query)
                         result = cursor.fetchall()
                         return result
                 except Exception as e:
                         print(f"Error: {e}")
-                        return None, status
+                        return None
 
                 finally:
                         self.conn.commit()
