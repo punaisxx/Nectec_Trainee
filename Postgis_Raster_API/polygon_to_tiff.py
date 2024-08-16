@@ -62,6 +62,7 @@ class TiffFactory:
 
         except Exception as e:
             print(f"Error: {e}")
+            status = f"Error: {e}"
             return None, status
 
         finally:
