@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, send_file, redirect, url_for
+from flask import Flask, request, jsonify, send_file, redirect, url_for, abort
 from datetime import datetime
 import uuid
 import os
@@ -21,37 +21,40 @@ app = Flask(__name__)
 
 @app.route('/download/', methods=['POST'])
 def tiff_output():
-    data = request.get_json()
-    polygon_coords = data.get('polygon_coords')
-    result = tiff_factory.polygon_to_geotiff(polygon_coords)
-    filename = result[0]
-    status = result[1]
-    if filename == None:
-        return jsonify({"file_url": "Not Found", "status": status})
-    elif filename == 'x':
-        return redirect(url_for('create_file'))
-    else:
-        file_url = url_for('get_tiff', filename=filename)
-        plant_area = tiff_factory.polygon_to_area(polygon_coords)
-        out_of_raster = tiff_factory.out_raster_area(polygon_coords)
-        return jsonify(
-            {
-                "status": status,
-                "result": {
-                    "raster": file_url,
-                    "stats": {
-                        "area": {
-                            "rice": plant_area[1],
-                            "sugarcane": plant_area[2],
-                            "other": plant_area[0],
-                            "out_of_raster": out_of_raster
-                        },
-                        "area_unit": "m²"
-                    }
-                },
-                "input_polygon": polygon_coords
-            }
-        )
+    try:
+        data = request.get_json()
+        polygon_coords = data.get('polygon_coords')
+        result = tiff_factory.polygon_to_geotiff(polygon_coords)
+        filename = result[0]
+        status = result[1]
+        if filename == None:
+            return jsonify({"Error": status}), 422
+        elif filename == 'x':
+            return redirect(url_for('create_file'))
+        else:
+            file_url = url_for('get_tiff', filename=filename)
+            plant_area = tiff_factory.polygon_to_area(polygon_coords)
+            out_of_raster = tiff_factory.out_raster_area(polygon_coords)
+            return jsonify(
+                {
+                    "status": status,
+                    "result": {
+                        "raster": file_url,
+                        "stats": {
+                            "area": {
+                                "rice": plant_area[1],
+                                "sugarcane": plant_area[2],
+                                "other": plant_area[0],
+                                "out_of_raster": out_of_raster
+                            },
+                            "area_unit": "m²"
+                        }
+                    },
+                    "input_polygon": polygon_coords
+                }
+            )
+    except Exception as e:
+        return jsonify({'Error': 'An unexpected error occurred', 'details': str(e)}), 400
 
 @app.route('/downloads/<filename>')
 def get_tiff(filename):
