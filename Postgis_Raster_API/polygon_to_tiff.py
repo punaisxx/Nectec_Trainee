@@ -3,18 +3,24 @@ from psycopg2 import OperationalError
 from datetime import datetime
 import uuid
 import os
-from dotenv import load_dotenv
+# from dotenv import load_dotenv
 
-load_dotenv()
+# load_dotenv()
 
 class TiffFactory:
     def __init__(self):
         try:
-            self.conn = psycopg2.connect( host=os.getenv('HOST') ,
-                                    port=os.getenv('PORT'), 
-                                    database = os.getenv('DATABASE') , 
-                                    user=os.getenv('USER') , 
-                                    password=os.getenv('PASSWORD')
+            # Edit connection
+            # self.conn = psycopg2.connect( host=os.getenv('HOST') ,
+            #                         port=os.getenv('PORT'), 
+            #                         database = os.getenv('DATABASE') , 
+            #                         user=os.getenv('USER') , 
+            #                         password=os.getenv('PASSWORD')
+            # )
+            self.conn = psycopg2.connect( host="localhost" ,
+                                    port="5432", 
+                                    database = "postgres" , 
+                                    user="postgres"
             )
         except OperationalError as e:
             print(f"Error connecting to the database: {e}")
@@ -49,16 +55,21 @@ class TiffFactory:
                 timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
                 uid = uuid.uuid4()
                 filename = f"{timestamp}_{uid}.tiff"
-                with open(f'/app/tiff_results/{filename}', 'wb') as f:
+                # Edit tiff_results directory
+                # with open(f'/app/tiff_results/{filename}', 'wb') as f:
+                with open(f'/Users/rawinnipha/Nectec_Trainee-Test local/Postgis_Raster_API/tiff_results/{filename}', 'wb') as f:
                     f.write(out_image.tobytes())
                 status = f"File '{filename}' created."
                 return filename, status
             else:
+                # No cropped raster data found. Start landuse detection engine.
+                no_data = 'x'
                 status = "No cropped raster data found."
-                return None, status
+                return no_data, status
 
         except Exception as e:
             print(f"Error: {e}")
+            status = f"{e}"
             return None, status
 
         finally:
@@ -89,7 +100,7 @@ class TiffFactory:
             cursor.execute("SET postgis.gdal_enabled_drivers = 'ENABLE_ALL';")
             cursor.execute(query)
             out_area = cursor.fetchone()
-            out_area_output = round(out_area[0], 2)
+            out_area_output = round(out_area[0])
 
             return out_area_output
         except Exception as e:
