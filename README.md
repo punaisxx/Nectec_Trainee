@@ -1,5 +1,3 @@
----
-
 # API Environment Setup Guide
 
 ## Prerequisites
