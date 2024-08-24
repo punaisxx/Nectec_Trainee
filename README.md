@@ -1,5 +1,3 @@
-Here's how you can structure your `README.md` file without the section numbers:
-
 ---
 
 # API Environment Setup Guide
